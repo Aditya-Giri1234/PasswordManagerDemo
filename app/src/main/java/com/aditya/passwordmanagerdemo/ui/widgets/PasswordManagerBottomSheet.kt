@@ -5,6 +5,7 @@ import android.util.Patterns
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -40,6 +41,7 @@ import com.aditya.passwordmanagerdemo.ui.components.AddHorizontalSpace
 import com.aditya.passwordmanagerdemo.ui.components.AddVerticalSpace
 import com.aditya.passwordmanagerdemo.ui.components.CustomButton
 import com.aditya.passwordmanagerdemo.ui.components.FormTextField
+import com.aditya.passwordmanagerdemo.ui.theme.floatColor
 
 @Preview(showBackground = true)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,22 +51,24 @@ fun PasswordManagerBottomSheet(
     sheetState: SheetState = rememberModalBottomSheetState(),
     isBottomSheetOpen: Boolean = true,
     passwordInfo: PasswordInfo? = null,
-    onDismiss: () -> Unit ={},
-    onSave: (PasswordInfo) -> Unit={},
-    onEdit: (PasswordInfo) -> Unit={},
-    onDelete: (PasswordInfo) -> Unit={}
+    onDismiss: () -> Unit = {},
+    onSave: (PasswordInfo) -> Unit = {},
+    onEdit: (PasswordInfo) -> Unit = {},
+    onDelete: (PasswordInfo) -> Unit = {}
 ) {
-    var passwordType by remember {
-        mutableStateOf("")
+    println(passwordInfo)
+    var passwordType by remember(passwordInfo) {
+        mutableStateOf(passwordInfo?.passwordType ?: "")
     }
 
-    var userNameOrEmail by remember {
-        mutableStateOf("")
+    var userNameOrEmail by remember(passwordInfo) {
+        mutableStateOf(passwordInfo?.userNameOrEmail ?: "")
     }
 
-    var password by remember {
-        mutableStateOf("")
+    var password by remember(passwordInfo) {
+        mutableStateOf(passwordInfo?.password ?: "")
     }
+
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusController = LocalFocusManager.current
@@ -81,20 +85,23 @@ fun PasswordManagerBottomSheet(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    BottomSheetDefaults.DragHandle()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        BottomSheetDefaults.DragHandle(color = Color.Gray)
+                    }
                     AnimatedVisibility(
-                        passwordInfo != null
+                        passwordInfo != null,
+                        modifier = Modifier.padding(start = 20.dp),
                     ) {
                         Text(
                             "Account Details", style = MaterialTheme.typography.titleLarge.copy(
-                                color = Color.Blue,
+                                color = floatColor,
                                 fontWeight = FontWeight.SemiBold
                             )
                         )
-                        AddVerticalSpace(10)
-                        HorizontalDivider()
                     }
-
                 }
             }
         ) {
@@ -177,10 +184,11 @@ fun PasswordManagerBottomSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         CustomButton(
+                            modifier = Modifier.weight(1f),
                             onClick = {
                                 if (validateInputs(
                                         context,
@@ -191,6 +199,7 @@ fun PasswordManagerBottomSheet(
                                 ) {
                                     onEdit(
                                         PasswordInfo(
+                                            id = passwordInfo.id,
                                             passwordType = passwordType,
                                             userNameOrEmail = userNameOrEmail,
                                             password = password
@@ -203,10 +212,9 @@ fun PasswordManagerBottomSheet(
                         )
                         AddHorizontalSpace(10)
                         CustomButton(
+                            modifier = Modifier.weight(1f),
                             onClick = {
-                                if (passwordInfo != null) {
-                                    onDelete(passwordInfo)
-                                }
+                                onDelete(passwordInfo)
                             },
                             label = "Delete",
                             color = Color.Red.copy(

@@ -1,5 +1,6 @@
 package com.aditya.passwordmanagerdemo.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aditya.passwordmanagerdemo.common.model.ApiResponse
@@ -34,9 +35,9 @@ class HomeViewModel @Inject constructor(private val repo: PasswordRepo) : ViewMo
         job?.cancel(CancellationException("A new password request is begin."))
         job = viewModelScope.launch(Dispatchers.IO) {
             try {
-                repo.getAllPasswords().onEach {
+                repo.getAllPasswords().onEach { values ->
                     _passwords.update {
-                        it
+                        values
                     }
                 }.launchIn(this)
 

@@ -3,10 +3,13 @@ package com.aditya.passwordmanagerdemo.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -14,6 +17,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -27,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,9 +46,11 @@ import com.aditya.passwordmanagerdemo.common.model.ApiResponse
 import com.aditya.passwordmanagerdemo.common.utils.Constants
 import com.aditya.passwordmanagerdemo.common.utils.Helper
 import com.aditya.passwordmanagerdemo.domain.models.PasswordInfo
+import com.aditya.passwordmanagerdemo.ui.theme.floatColor
 import com.aditya.passwordmanagerdemo.ui.viewmodels.HomeViewModel
 import com.aditya.passwordmanagerdemo.ui.widgets.PasswordItem
 import com.aditya.passwordmanagerdemo.ui.widgets.PasswordManagerBottomSheet
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -58,12 +65,15 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
         mutableStateOf(false)
     }
 
-    var selectedPasswordInfo by remember {
-        mutableStateOf<PasswordInfo?>(null)
-    }
+    var selectedPasswordInfo by rememberSaveable { mutableStateOf<PasswordInfo?>(null) }
+
 
     val dbOperation by homeViewModel.dbOperation.collectAsStateWithLifecycle(ApiResponse.Initial())
     val passwords by homeViewModel.passwords.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        homeViewModel.getAllPasswords()
+    }
 
     Scaffold(
         topBar = {
@@ -83,40 +93,54 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                 onClick = {
                     selectedPasswordInfo = null
                     isBottomSheetOpen = true
-                }
+                },
+                containerColor = floatColor
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "", tint = Color.Black)
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = "",
+                    tint = Color.White,
+                    modifier = Modifier.size(35.dp)
+                )
             }
         }
     ) { innerPadding ->
-        if (passwords.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "No passwords found")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 15.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                items(passwords) { password ->
-                    PasswordItem(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp),
-                        password,
-                        onItemClick = {
-                            selectedPasswordInfo = it
-                            isBottomSheetOpen = true
-                        })
+
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
+            HorizontalDivider()
+            if (passwords.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "No passwords found")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 15.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(passwords) { password ->
+                        PasswordItem(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp),
+                            password,
+                            onItemClick = {
+                                selectedPasswordInfo = it
+                                isBottomSheetOpen = true
+                            })
+                    }
                 }
             }
         }
+
     }
 
 
@@ -163,7 +187,9 @@ fun DbOperation(
                 scope.launch {
                     sheetState.hide()
                 }.invokeOnCompletion {
-                    onBottomSheetDismiss()
+                    if (!sheetState.isVisible) {
+                        onBottomSheetDismiss()
+                    }
                 }
             }
         }

@@ -20,7 +20,7 @@ fun CustomButton(
     color: Color = Color.Black
 ) {
     ElevatedButton(
-        modifier = Modifier,
+        modifier = modifier,
         onClick = onClick,
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = 4.dp
