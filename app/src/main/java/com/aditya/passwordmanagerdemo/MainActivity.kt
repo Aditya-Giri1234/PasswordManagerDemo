@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.aditya.passwordmanagerdemo.ui.navigation.AppNavigation
 import com.aditya.passwordmanagerdemo.ui.screens.HomeScreen
 import com.aditya.passwordmanagerdemo.ui.theme.PasswordManagerDemoTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,5 +32,5 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MyApp() {
-    HomeScreen(hiltViewModel())
+    AppNavigation()
 }

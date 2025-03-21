@@ -102,4 +102,16 @@ dependencies {
 
     //Kotlin - reflection
     implementation(libs.kotlin.reflect)
+
+
+    //datastore
+    implementation(libs.datastore)
+
+    //for encryption
+    implementation(libs.android.chipher)
+    implementation(libs.android.sqlite)
+
+    //Navigation
+    implementation(libs.androidx.navigation.compose)
+
 }

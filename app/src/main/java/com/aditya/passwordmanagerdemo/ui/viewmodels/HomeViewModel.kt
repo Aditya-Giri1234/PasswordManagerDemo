@@ -1,18 +1,20 @@
 package com.aditya.passwordmanagerdemo.ui.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aditya.passwordmanagerdemo.common.encryption.AESManager
 import com.aditya.passwordmanagerdemo.common.model.ApiResponse
+import com.aditya.passwordmanagerdemo.data.SessionManager
 import com.aditya.passwordmanagerdemo.domain.models.PasswordInfo
 import com.aditya.passwordmanagerdemo.domain.repo.PasswordRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -20,7 +22,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val repo: PasswordRepo) : ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val repo: PasswordRepo,
+    private val aesManager: AESManager ,
+    private val sessionManager: SessionManager
+) : ViewModel() {
 
     private val _passwords = MutableStateFlow<List<PasswordInfo>>(emptyList())
     val passwords = _passwords.asStateFlow()
@@ -30,6 +36,21 @@ class HomeViewModel @Inject constructor(private val repo: PasswordRepo) : ViewMo
 
     private var job: Job? = null
 
+    // StateFlow to hold the session PIN (or other value)
+    private val _sessionPin = MutableStateFlow<String?>(null)
+    val sessionPin: StateFlow<String?> get() = _sessionPin
+
+    init {
+        // Launch a coroutine to get the session PIN
+        viewModelScope.launch {
+            _sessionPin.value = sessionManager.getSessionPin()
+        }
+    }
+
+    fun setPin(pin :String) = viewModelScope.launch {
+        sessionManager.setSessionPin(pin)
+    }
+
 
     fun getAllPasswords() {
         job?.cancel(CancellationException("A new password request is begin."))
@@ -37,7 +58,11 @@ class HomeViewModel @Inject constructor(private val repo: PasswordRepo) : ViewMo
             try {
                 repo.getAllPasswords().onEach { values ->
                     _passwords.update {
-                        values
+                        values.map {
+                            it.copy(
+                                password = aesManager.decrypt(it.password)
+                            )
+                        }
                     }
                 }.launchIn(this)
 
@@ -53,7 +78,11 @@ class HomeViewModel @Inject constructor(private val repo: PasswordRepo) : ViewMo
             ApiResponse.Loading()
         }
         try {
-            val count = repo.insertPassword(passwordInfo)
+            val count = repo.insertPassword(
+                passwordInfo.copy(
+                    password = aesManager.encrypt(passwordInfo.password)
+                )
+            )
 
             if (count > 0) {
                 _dbOperation.update {
@@ -75,7 +104,9 @@ class HomeViewModel @Inject constructor(private val repo: PasswordRepo) : ViewMo
             ApiResponse.Loading()
         }
         try {
-            val count = repo.updatePassword(passwordInfo)
+            val count = repo.updatePassword(passwordInfo.copy(
+                password = aesManager.encrypt(passwordInfo.password)
+            ))
             if (count > 0) {
                 _dbOperation.update {
                     ApiResponse.Success("Password updated successfully")
@@ -95,7 +126,9 @@ class HomeViewModel @Inject constructor(private val repo: PasswordRepo) : ViewMo
             ApiResponse.Loading()
         }
         try {
-            val count = repo.deletePassword(passwordInfo)
+            val count = repo.deletePassword(passwordInfo.copy(
+                password = aesManager.encrypt(passwordInfo.password)
+            ))
 
             if (count > 0) {
                 _dbOperation.update {

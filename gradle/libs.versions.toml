@@ -6,8 +6,8 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.7"
-activityCompose = "1.9.3"
-composeBom = "2024.12.01"
+activityCompose = "1.10.1"
+composeBom = "2025.03.00"
 
 gson = "2.11.0"
 symbolProcessing = "2.0.0-1.0.21"
@@ -16,6 +16,9 @@ hilt = "2.51.1"
 hilt-navigation = "1.2.0"
 kotlin_serialization = "1.7.3"
 datastore-version = "1.1.1"
+sqlchipher = "4.5.3"
+sqlite = "2.1.0"
+navigationCompose = "2.8.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,6 +50,9 @@ kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-j
 datastore = {module = "androidx.datastore:datastore-preferences" , version.ref = "datastore-version"}
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" , version.ref = "kotlin"}
 kotlin-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core" , version.ref = "kotlin"}
+android-chipher = {module = "net.zetetic:android-database-sqlcipher" , version.ref = "sqlchipher"}
+android-sqlite = {module = "androidx.sqlite:sqlite" , version.ref = "sqlite"}
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

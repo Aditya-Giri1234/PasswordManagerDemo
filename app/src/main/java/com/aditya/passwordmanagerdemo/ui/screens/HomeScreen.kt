@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,12 +44,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aditya.passwordmanagerdemo.common.model.ApiResponse
 import com.aditya.passwordmanagerdemo.common.utils.Constants
 import com.aditya.passwordmanagerdemo.common.utils.Helper
+import com.aditya.passwordmanagerdemo.common.utils.passwordInfoSaver
 import com.aditya.passwordmanagerdemo.domain.models.PasswordInfo
 import com.aditya.passwordmanagerdemo.ui.theme.floatColor
 import com.aditya.passwordmanagerdemo.ui.viewmodels.HomeViewModel
-import com.aditya.passwordmanagerdemo.ui.widgets.PasswordItem
-import com.aditya.passwordmanagerdemo.ui.widgets.PasswordManagerBottomSheet
-import kotlinx.coroutines.delay
+import com.aditya.passwordmanagerdemo.ui.widgets.home.PasswordItem
+import com.aditya.passwordmanagerdemo.ui.widgets.home.PasswordManagerBottomSheet
 import kotlinx.coroutines.launch
 
 
@@ -65,7 +64,9 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
         mutableStateOf(false)
     }
 
-    var selectedPasswordInfo by rememberSaveable { mutableStateOf<PasswordInfo?>(null) }
+    var selectedPasswordInfo by remember {
+        mutableStateOf<PasswordInfo?>(null)
+    }
 
 
     val dbOperation by homeViewModel.dbOperation.collectAsStateWithLifecycle(ApiResponse.Initial())

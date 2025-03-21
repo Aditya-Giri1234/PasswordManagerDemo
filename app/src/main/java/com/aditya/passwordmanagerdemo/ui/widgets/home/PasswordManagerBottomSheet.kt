@@ -1,25 +1,29 @@
-package com.aditya.passwordmanagerdemo.ui.widgets
+package com.aditya.passwordmanagerdemo.ui.widgets.home
 
 import android.content.Context
 import android.util.Patterns
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,6 +73,19 @@ fun PasswordManagerBottomSheet(
         mutableStateOf(passwordInfo?.password ?: "")
     }
 
+    var strengthLabel by remember {
+        mutableStateOf("")
+    }
+    var strengthColor by remember {
+        mutableStateOf(Color.Transparent)
+    }
+
+    LaunchedEffect(password) {
+        val value = evaluatePasswordStrength(password)
+        strengthLabel = value.first
+        strengthColor = value.second
+    }
+
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusController = LocalFocusManager.current
@@ -78,8 +95,9 @@ fun PasswordManagerBottomSheet(
     if (isBottomSheetOpen) {
         ModalBottomSheet(
             sheetState = sheetState,
-            modifier = modifier,
+            modifier = modifier.systemBarsPadding().imePadding(),
             onDismissRequest = onDismiss,
+            contentWindowInsets = {WindowInsets.safeDrawing},
             dragHandle = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -158,6 +176,17 @@ fun PasswordManagerBottomSheet(
                         focusController.clearFocus(true)
                     }
                 )
+                // Show strength indicator only when password length >= 8
+                if (password.length >= 8 && strengthLabel.isNotEmpty()) {
+                    AddVerticalSpace(8)
+                    Text(
+                        text = "Password strength: $strengthLabel",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = strengthColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
                 AddVerticalSpace(20)
 
                 if (passwordInfo == null) {
@@ -252,5 +281,33 @@ fun validateInputs(
         }
 
         else -> true // All validations passed
+    }
+}
+
+
+/**
+ * Evaluates the strength of a password based on character variety.
+ * Returns a pair: [strengthLabel, strengthColor].
+ */
+fun evaluatePasswordStrength(password: String): Pair<String, Color> {
+    if (password.length < 8) {
+        // You may decide not to show any indicator if the length is below 8.
+        return Pair("", Color.Transparent)
+    }
+    var score = 0
+    // Increase score for presence of lower-case letters.
+    if (password.any { it.isLowerCase() }) score++
+    // Increase score for presence of upper-case letters.
+    if (password.any { it.isUpperCase() }) score++
+    // Increase score for presence of digits.
+    if (password.any { it.isDigit() }) score++
+    // Increase score for presence of special characters.
+    if (password.any { !it.isLetterOrDigit() }) score++
+
+    return when (score) {
+        0, 1 -> Pair("Weak", Color.Red)
+        2, 3 -> Pair("Medium", Color(0xFFFFA500)) // Orange
+        4 -> Pair("Strong", Color.Green)
+        else -> Pair("Weak", Color.Red)
     }
 }
